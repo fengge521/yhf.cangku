@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Document</title>
+  <!-- 导入页面的基本样式 -->
+  <link rel="stylesheet" href="./css/search.css" />
+  <!-- 导入 jQuery -->
+  <script src="./lib/jquery.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Logo -->
+    <img src="./images/taobao_logo.png" alt="" class="logo" />
+
+    <div class="box">
+      <!-- tab 栏 -->
+      <div class="tabs">
+        <div class="tab-active">宝贝</div>
+        <div>店铺</div>
+      </div>
+      <!-- 搜索区域（搜索框和搜索按钮） -->
+      <div class="search-box">
+        <input type="text" class="ipt" placeholder="请输入要搜索的内容" /><button class="btnSearch">
+          搜索
+        </button>
+      </div>
+      <!-- 下面是搜索建议 -->
+      <div id="suggest-list"></div>
+    </div>
+  </div>
+  <!-- 引入模板引擎js文件 -->
+  <script src="./lib/template-web.js"></script>
+  <!-- 模板 -->
+  <script type="text/html" id="mb">
+    <!-- 遍历result数组 -->
+      {{each result val}}
+  <div class="suggest-item">{{val[0]}}</div>
+  {{/each}}
+  </script>
+  <script>
+    var cacheObj = {};
+    var timer = null;
+    // 通过JSONP找到数据
+    function getSust(a) {
+      $.getJSON('https://suggest.taobao.com/sug?callback=?',
+        { q: a },
+        function (res) {
+          // 测试
+          // console.log(res);
+
+          // console.log(str);
+          cacheObj[a] = res;
+          if (res.result.length <= 0) {
+            return $('#suggest-list').empty().hide();
+          }
+          $('#suggest-list').html(template('mb', res)).show();
+        })
+    };
+    // 给输入框添加一个键盘抬起事件
+    $('.ipt').on('keyup', function () {
+      // 测试
+      // console.log(111);
+
+      // 获取输入框内输入的内容
+      var z = $(this).val().trim();
+      if (z === '') {
+        return $('#suggest-list').empty().hide();
+      }
+      if (cacheObj[z]) {
+        $('#suggest-list').html(template('mb', cacheObj[z])).show();
+        clearTimeout(timer);
+        return;
+      }
+      if (timer != null) {
+        clearTimeout(timer);
+      }
+      timer = setTimeout(function () {
+        getSust(z);
+      }, 1000)
+      // 调用函数
+      getSust(z);
+    })
+  </script>
+</body>
+
+</html>
